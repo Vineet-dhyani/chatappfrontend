@@ -14,9 +14,9 @@ function ContactSidebar(props) {
 	const dispatch = useDispatch();
 	const contacts = useSelector(selectContacts);
 	const selectedContactId = useSelector(({ chatApp }) => chatApp.contacts.selectedContactId);
-
+    
 	const contact = contacts.find(_contact => _contact.id === selectedContactId);
-
+	console.log("inside selectedContactId",props);
 	if (!contact) {
 		return null;
 	}

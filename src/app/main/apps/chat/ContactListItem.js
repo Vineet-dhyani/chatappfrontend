@@ -20,15 +20,16 @@ const useStyles = makeStyles(theme => ({
 }));
 
 function ContactListItem(props) {
+	const { contact ,handleContactsChat} = props;
 	const classes = useStyles(props);
 
 	return (
 		<ListItem
 			button
 			className={clsx(classes.contactListItem, 'px-16 py-12 min-h-92', {
-				active: props.selectedContactId === props.contact.id
+				active: props.selectedContactId === props.contact.contactId
 			})}
-			onClick={() => props.onContactClick(props.contact.id)}
+			onClick={() => handleContactsChat(contact)}
 		>
 			<div className="relative">
 				<div className="absolute right-0 bottom-0 -m-4 z-10">
@@ -36,7 +37,7 @@ function ContactListItem(props) {
 				</div>
 
 				<Avatar src={props.contact.avatar} alt={props.contact.name}>
-					{!props.contact.avatar || props.contact.avatar === '' ? props.contact.name[0] : ''}
+					{!contact.avatar || contact.avatar === '' ? contact.full_name: ''}
 				</Avatar>
 			</div>
 
@@ -46,8 +47,8 @@ function ContactListItem(props) {
 					primary: 'font-medium text-14',
 					secondary: 'truncate'
 				}}
-				primary={props.contact.name}
-				secondary={props.contact.mood}
+				primary={contact.full_name || contact.phone_number}
+				secondary={contact.mood}
 			/>
 
 			{props.contact.chatId && (

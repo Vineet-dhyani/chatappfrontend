@@ -45,9 +45,11 @@ const statusArr = [
 ];
 
 function ChatsSidebar(props) {
+	const { apicontacts, handleContactsChat } = props;
+	console.log("Inside ChatsSidebar apiContacts ==>", apicontacts)
 	const dispatch = useDispatch();
 	const contacts = useSelector(selectContacts);
-	const user = useSelector(({ chatApp }) => chatApp.user);
+	const loginUser = useSelector(({ auth }) => auth.user.data);
 	const theme = useTheme();
 	const isMobile = useMediaQuery(theme.breakpoints.down('md'));
 
@@ -95,7 +97,7 @@ function ChatsSidebar(props) {
 		<div className="flex flex-col flex-auto h-full">
 			<AppBar position="static" color="default" elevation={0}>
 				<Toolbar className="flex justify-between items-center px-4">
-					{user && (
+					{loginUser && (
 						<div
 							className="relative w-40 h-40 p-0 mx-12 cursor-pointer"
 							onClick={() => dispatch(openUserSidebar())}
@@ -103,8 +105,8 @@ function ChatsSidebar(props) {
 							role="button"
 							tabIndex={0}
 						>
-							<Avatar src={user.avatar} alt={user.name} className="w-40 h-40">
-								{!user.avatar || user.avatar === '' ? user.name[0] : ''}
+							<Avatar src={loginUser.photoURL} alt={loginUser.displayName} className="w-40 h-40">
+								{!loginUser.photoURL || loginUser.photoURL === '' ? loginUser.displayName : ''}
 							</Avatar>
 							<div
 								className="absolute right-0 bottom-0 -m-4 z-10 cursor-pointer"
@@ -115,7 +117,7 @@ function ChatsSidebar(props) {
 								role="button"
 								tabIndex={0}
 							>
-								<StatusIcon status={user.status} />
+								<StatusIcon status={loginUser.status} />
 							</div>
 
 							<Menu
@@ -190,11 +192,11 @@ function ChatsSidebar(props) {
 						}
 
 						const chatListContacts =
-							contacts.length > 0 && user && user.chatList
-								? user.chatList.map(_chat => ({
-										..._chat,
-										...contacts.find(_contact => _contact.id === _chat.contactId)
-								  }))
+							contacts.length > 0 && loginUser && loginUser.chatList
+								? loginUser.chatList.map(_chat => ({
+									..._chat,
+									...contacts.find(_contact => _contact.id === _chat.contactId)
+								}))
 								: [];
 						const filteredContacts = getFilteredArray([...contacts], searchText);
 						const filteredChatList = getFilteredArray([...chatListContacts], searchText);
@@ -219,7 +221,7 @@ function ChatsSidebar(props) {
 								initial="hidden"
 								animate="show"
 							>
-								{filteredChatList.length > 0 && (
+								{/* {filteredChatList.length > 0 && (
 									<motion.div variants={item}>
 										<Typography className="font-medium text-20 px-16 py-24" color="secondary">
 											Chats
@@ -234,9 +236,9 @@ function ChatsSidebar(props) {
 											onContactClick={contactId => dispatch(getChat({ contactId, isMobile }))}
 										/>
 									</motion.div>
-								))}
+								))} */}
 
-								{filteredContacts.length > 0 && (
+								{apicontacts && apicontacts.length > 0 && (
 									<motion.div variants={item}>
 										<Typography className="font-medium text-20 px-16 py-24" color="secondary">
 											Contacts
@@ -244,9 +246,10 @@ function ChatsSidebar(props) {
 									</motion.div>
 								)}
 
-								{filteredContacts.map(contact => (
+								{apicontacts && apicontacts.map(contact => (
 									<motion.div variants={item} key={contact.id}>
 										<ContactListItem
+											handleContactsChat={event => handleContactsChat(event)}
 											contact={contact}
 											onContactClick={contactId => dispatch(getChat({ contactId, isMobile }))}
 										/>
@@ -254,7 +257,7 @@ function ChatsSidebar(props) {
 								))}
 							</motion.div>
 						);
-					}, [contacts, user, searchText, dispatch, isMobile])}
+					}, [contacts, loginUser, searchText, dispatch, isMobile, apicontacts])}
 				</List>
 			</FuseScrollbars>
 		</div>

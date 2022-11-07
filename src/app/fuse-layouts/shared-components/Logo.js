@@ -28,7 +28,7 @@ function Logo() {
 
 	return (
 		<div className={clsx(classes.root, 'flex items-center')}>
-			<img className="logo-icon w-24 h-24" src="assets/images/logos/fuse.svg" alt="logo" />
+			{/* <img className="logo-icon w-24 h-24" src="assets/images/logos/fuse.svg" alt="logo" />
 			<Typography className="text-16 leading-none mx-12 font-medium logo-text" color="inherit">
 				FUSE
 			</Typography>
@@ -40,7 +40,7 @@ function Logo() {
 					width="16"
 				/>
 				<span className="react-text text-12 mx-4">React</span>
-			</div>
+			</div> */}
 		</div>
 	);
 }

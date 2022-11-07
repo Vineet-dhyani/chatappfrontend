@@ -30,8 +30,7 @@ import {
 	closeMobileChatsSidebar
 } from './store/sidebarsSlice';
 import UserSidebar from './UserSidebar';
-import getApiContacts from 'app/services/chatService';
-
+import ChatService from "app/services/chatService"
 const drawerWidth = 400;
 const headerHeight = 200;
 
@@ -116,31 +115,117 @@ const useStyles = makeStyles(theme => ({
 }));
 
 function ChatApp(props) {
-	const [apiContacts, setApiContacts] = useState("");
+	const [searchParam, setsearchParam] = useState(
+		{
+			pageNum: 1,
+			filter: []
+		}
+	)
+	const [fetchedchat, setFetchedChat] = useState();
+	const [apicontacts, setApiContacts] = useState();
+	const [chat, setChat] = useState();
+	const [selectedcontactDetail, setSelectedContactDetail] = useState();
 	const dispatch = useDispatch();
-	const chat = useSelector(({ chatApp }) => chatApp.chat);
+	// const chat = useSelector(({ chatApp }) => chatApp.chat);
 	const mobileChatsSidebarOpen = useSelector(({ chatApp }) => chatApp.sidebars.mobileChatsSidebarOpen);
 	const userSidebarOpen = useSelector(({ chatApp }) => chatApp.sidebars.userSidebarOpen);
 	const contactSidebarOpen = useSelector(({ chatApp }) => chatApp.sidebars.contactSidebarOpen);
 	const selectedContact = useSelector(state => selectContactById(state, state.chatApp.contacts.selectedContactId));
-
+	let Contacts = ""
 	const classes = useStyles(props);
 
-	useEffect(async () => {
-		const resp = await getApiContacts('1');
-        if (resp) {
-			setApiContacts(resp)
-			console.log("Inside chatContacts", resp.data);
+	useEffect(() => {
+		let params = {
+			page: '1',
+			sort: "last_message.createdAt -1",
+			integration_id: "634e38d40a3a9ffd3a13bb20",
+			show_page_count: "no",
+			showOnlyContactWithLastMessage: false
 		}
-		else {
-			console.log(error);
+
+		async function callApiContact() {
+			const response = await ChatService.getApiContacts(params);
+			if (response) {
+				Contacts = response.data
+				setApiContacts(Contacts);
+			}
+			else {
+				console.log(error);
+			}
 		}
+		callApiContact();
 	}, [])
+
+
+
+	useEffect(() => {
+		const params = {
+			page: "1",
+			searchParam
+		}
+		async function callChatMessages() {
+			const response = await ChatService.getChatMessages(params);
+			if (response) {
+				console.log("Inside chatMessages", response);
+				setFetchedChat(response.data)
+			}
+			else {
+				console.log(error);
+			}
+		}
+		callChatMessages();
+	}, [searchParam])
+
+	useEffect(() => {
+		console.log("Inside fetchedchat", fetchedchat);
+		if (fetchedchat) {
+			const modifychat = [];
+			fetchedchat.forEach(item => {
+				if (item.contact.id === selectedcontactDetail?._id)
+					modifychat.unshift(item)
+
+			});
+			console.log("Inside modifychat", modifychat);
+			setChat(modifychat)
+		}
+	}, [fetchedchat])
+
 
 	useEffect(() => {
 		dispatch(getUserData());
 		dispatch(getContacts());
 	}, [dispatch]);
+
+
+
+	const handleContactsChat = (contact) => {
+		console.log("Inside handleContactChat ==>", contact);
+		setSelectedContactDetail(contact);
+		const param = [
+
+			{
+				"field_name": "contact.id",
+				"operator": "matches",
+				"field_value": contact._id
+			},
+			{
+				"field_name": "integration.id",
+				"operator": "matches",
+				"field_value": contact?.last_message?.integration_id
+			},
+			{
+				"field_name": "send_status"
+				, "operator": "in",
+				"field_value": ["sent", "deleted", "failed"]
+			}
+		]
+
+		setsearchParam({
+			pageNum: 1,
+			filter: JSON.stringify(param)
+		})
+
+	}
 
 	return (
 		<div className={clsx(classes.root)}>
@@ -183,7 +268,8 @@ function ChatApp(props) {
 								paper: classes.drawerPaper
 							}}
 						>
-							<ChatsSidebar />
+
+							<ChatsSidebar handleContactsChat={event => handleContactsChat(event)} apicontacts={apicontacts} />
 						</Drawer>
 					</Hidden>
 					<SwipeableDrawer
@@ -211,7 +297,7 @@ function ChatApp(props) {
 					</SwipeableDrawer>
 
 					<main className={clsx(classes.contentWrapper, 'z-10')}>
-						{!chat ? (
+						{!selectedcontactDetail ? (
 							<div className="flex flex-col flex-1 items-center justify-center p-24">
 								<Paper className="rounded-full p-48 md:p-64 shadow-xl">
 									<Icon className="block text-48 md:text-64" color="secondary">
@@ -257,24 +343,24 @@ function ChatApp(props) {
 										>
 											<div className="relative mx-8">
 												<div className="absolute right-0 bottom-0 -m-4 z-10">
-													<StatusIcon status={selectedContact.status} />
+													<StatusIcon status={selectedcontactDetail.status} />
 												</div>
 
-												<Avatar src={selectedContact.avatar} alt={selectedContact.name}>
-													{!selectedContact.avatar || selectedContact.avatar === ''
-														? selectedContact.name[0]
+												<Avatar src={selectedcontactDetail.avatar} alt={selectedcontactDetail.full_name || selectedcontactDetail.phone_number}>
+													{!selectedcontactDetail.avatar || selectedcontactDetail.avatar === ''
+														? selectedcontactDetail.full_name || selectedcontactDetail.phone_number
 														: ''}
 												</Avatar>
 											</div>
 											<Typography color="inherit" className="text-18 font-semibold px-4">
-												{selectedContact.name}
+												{selectedcontactDetail.full_name || selectedcontactDetail.phone_number}
 											</Typography>
 										</div>
 									</Toolbar>
 								</AppBar>
 
 								<div className={classes.content}>
-									<Chat className="flex flex-1 z-10" />
+									<Chat selectedcontactDetail={selectedcontactDetail} apicontacts={apicontacts} chat={chat} className="flex flex-1 z-10" />
 								</div>
 							</>
 						)}

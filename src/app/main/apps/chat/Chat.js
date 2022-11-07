@@ -94,12 +94,13 @@ const useStyles = makeStyles(theme => ({
 }));
 
 function Chat(props) {
-	
+	const { chat, selectedcontactDetail, apicontacts } = props;
+	console.log("Inside chat.js Props==>",selectedcontactDetail);
 	const dispatch = useDispatch();
 	const contacts = useSelector(selectContacts);
 	const selectedContactId = useSelector(({ chatApp }) => chatApp.contacts.selectedContactId);
-	const chat = useSelector(({ chatApp }) => chatApp.chat);
-	const user = useSelector(({ chatApp }) => chatApp.user);
+	// const chat = useSelector(({ chatApp }) => chatApp.chat);
+	// const user = useSelector(({ chatApp }) => chatApp.user);
 
 	const classes = useStyles(props);
 	const chatRef = useRef(null);
@@ -110,6 +111,9 @@ function Chat(props) {
 			scrollToBottom();
 		}
 	}, [chat]);
+	useEffect(() => {
+		console.log("Inside useeffect chat", chat);
+	}, [])
 
 	function scrollToBottom() {
 		chatRef.current.scrollTop = chatRef.current.scrollHeight;
@@ -118,16 +122,16 @@ function Chat(props) {
 	function shouldShowContactAvatar(item, i) {
 		return (
 			item.who === selectedContactId &&
-			((chat.dialog[i + 1] && chat.dialog[i + 1].who !== selectedContactId) || !chat.dialog[i + 1])
+			((chat[i + 1] && chat[i + 1].who !== selectedContactId) || !chat[i + 1])
 		);
 	}
 
 	function isFirstMessageOfGroup(item, i) {
-		return i === 0 || (chat.dialog[i - 1] && chat.dialog[i - 1].who !== item.who);
+		return i === 0 || (chat[i - 1] && chat[i - 1]._id !== item._id);
 	}
 
 	function isLastMessageOfGroup(item, i) {
-		return i === chat.dialog.length - 1 || (chat.dialog[i + 1] && chat.dialog[i + 1].who !== item.who);
+		return i === chat.length - 1 || (chat[i + 1] && chat[i + 1].who !== item._id);
 	}
 
 	function onInputChange(ev) {
@@ -154,22 +158,23 @@ function Chat(props) {
 	return (
 		<div className={clsx('flex flex-col relative', props.className)}>
 			<FuseScrollbars ref={chatRef} className="flex flex-1 flex-col overflow-y-auto">
-				{chat && chat.dialog.length > 0 ? (
+				{chat && chat ? (
 					<div className="flex flex-col pt-16 px-16 ltr:pl-56 rtl:pr-56 pb-40">
-						{chat.dialog.map((item, i) => {
-							const contact =
-								item.who === user.id ? user : contacts.find(_contact => _contact.id === item.who);
+						{chat && chat.map((item, i) => {
+
+							// const contact =
+							// 	item._id === selectedcontactDetail?.id ? user : apicontacts.find(_contact => _contact.id === item._id);
 							return (
 								<div
 									key={item.time}
 									className={clsx(
 										classes.messageRow,
 										'flex flex-col flex-grow-0 flex-shrink-0 items-start justify-end relative px-16 pb-4',
-										{ me: item.who === user.id },
-										{ contact: item.who !== user.id },
-										{ 'first-of-group': isFirstMessageOfGroup(item, i) },
-										{ 'last-of-group': isLastMessageOfGroup(item, i) },
-										i + 1 === chat.dialog.length && 'pb-96'
+										{ me: item?.direction === 'o' },
+										{ contact: item?.direction === 'i' },
+										// { 'first-of-group': isFirstMessageOfGroup(item, i) },
+										// { 'last-of-group': isLastMessageOfGroup(item, i) },
+										i + 1 === chat.length && 'pb-96'
 									)}
 								>
 									{shouldShowContactAvatar(item, i) && (
@@ -179,12 +184,12 @@ function Chat(props) {
 										/>
 									)}
 									<div className="bubble flex relative items-center justify-center p-12 max-w-full shadow">
-										<div className="leading-tight whitespace-pre-wrap">{item.message}</div>
+										<div className="leading-tight whitespace-pre-wrap">{item.message.text}</div>
 										<Typography
 											className="time absolute hidden w-full text-11 mt-8 -mb-24 ltr:left-0 rtl:right-0 bottom-0 whitespace-nowrap"
 											color="textSecondary"
 										>
-											{formatDistanceToNow(new Date(item.time), { addSuffix: true })}
+											{formatDistanceToNow(new Date(item?.createdAt), { addSuffix: true })}
 										</Typography>
 									</div>
 								</div>

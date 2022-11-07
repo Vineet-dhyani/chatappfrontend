@@ -15,7 +15,7 @@ function PurchaseButton({ className }) {
 			color="secondary"
 		>
 			<Icon className="text-16">shopping_cart</Icon>
-			<span className="mx-4">Purchase FUSE React</span>
+			<span className="mx-4">Purchase FUSE Reactfffff</span>
 		</Button>
 	);
 }
